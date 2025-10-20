@@ -7,7 +7,7 @@ import { setLLMContext, clearLLMContext } from '@/lib/polar-llm-strategy';
 import { canAnonymousUserQuery, incrementAnonymousUsage } from '@/lib/anonymous-usage';
 import { parseMarketUrl, isValidMarketUrl } from '@/lib/tools/market-url-parser';
 
-export const maxDuration = 800;
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   let sessionId: string | null = null;
