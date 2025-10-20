@@ -8,6 +8,7 @@ import { AuthInitializer } from "@/components/auth-initializer";
 import Image from "next/image";
 import { Analytics } from '@vercel/analytics/next';
 
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],

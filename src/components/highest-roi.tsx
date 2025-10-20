@@ -15,10 +15,10 @@ interface MarketCardProps {
 const fallbackMarkets: FeaturedMarket[] = [
   {
     id: 1,
-    slug: "bitcoin-150k-2025",
-    question: "Will Bitcoin reach $150,000 by 2025?",
+    slug: "XRP all time high by December 31?",
+    question: "XRP all time high by December 31?",
     category: null,
-    polymarket_url: "https://polymarket.com/event/bitcoin-150k-2025",
+    polymarket_url: "https://polymarket.com/event/xrp-all-time-high-by-december-31?tid=1760986132680",
     volume: 4320000,
     end_date: "2025-12-31T23:59:59Z",
     current_odds: { yes: 0.28, no: 0.72 },
@@ -41,10 +41,10 @@ const fallbackMarkets: FeaturedMarket[] = [
   },
   {
     id: 3,
-    slug: "ethereum-5k-2025",
-    question: "Will Ethereum hit $5,000 by 2025?",
+    slug: "What price will Ethereum hit in October?",
+    question: "What price will Ethereum hit in October?",
     category: null,
-    polymarket_url: "https://polymarket.com/event/ethereum-5k-2025",
+    polymarket_url: "https://polymarket.com/event/what-price-will-ethereum-hit-in-october-167?tid=1760986105280",
     volume: 3899000,
     end_date: "2025-12-31T23:59:59Z",
     current_odds: { yes: 0.35, no: 0.65 },

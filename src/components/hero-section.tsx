@@ -182,16 +182,16 @@ export default function HeroSection({ onAnalyze, isAnalyzing, onShowHowItWorks, 
               className="flex justify-center mt-4"
             >
               <div className="relative flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/30">
-                <span className="text-sm text-white/80 font-medium">Powered by</span>
+                <span className="text-sm text-white/80 font-medium">Follow us</span>
                 <a
-                  href="https://valyu.network"
+                  href="https://x.com/AIPolyseer"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center hover:scale-105 transition-transform pt-0.5"
                 >
                   <Image
-                    src="/valyu.svg"
-                    alt="Valyu"
+                    src="/twitter.svg"
+                    alt="twitter"
                     width={80}
                     height={80}
                     className="h-4 w-auto opacity-80 hover:opacity-100 transition-opacity"
