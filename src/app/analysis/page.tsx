@@ -499,10 +499,10 @@ function AnalysisContent() {
                     
                     {/* Title */}
                     <h1 className="text-2xl md:text-3xl font-bold text-white mb-3 font-[family-name:var(--font-space)]">
-                      You&apos;ve Used Your Free Analyses
+                      
                     </h1>
                     <p className="text-white/80 mb-4">
-                      Upgrade to pay-per-use for unlimited access
+                    Pump.FUN
                     </p>
                   </div>
                   
@@ -746,9 +746,9 @@ function AnalysisContent() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-white/90 mb-1">Free Daily Analysis</h3>
+                <h3 className="text-sm font-medium text-white/90 mb-1">Pump.FUN  PolyMarket Analisis.</h3>
                 <p className="text-xs text-white/70">
-                  You&apos;re using 1 of 1 free analysis per day. Sign up for unlimited access!
+                  
                 </p>
               </div>
               <Button
@@ -756,7 +756,7 @@ function AnalysisContent() {
                 size="sm"
                 className="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1"
               >
-                Sign Up
+                Back To Menu
               </Button>
             </div>
           </motion.div>

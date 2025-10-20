@@ -5,13 +5,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import HeroSection from "@/components/hero-section";
 import HighestROI from "@/components/highest-roi";
 import ResultPanel from "@/components/result-panel";
-import MonetizationStrip from "@/components/monetization-strip";
 import ShareModal from "@/components/share-modal";
 import TelegramBotModal from "@/components/telegram-bot-modal";
 import HowItWorksModal from "@/components/how-it-works-modal";
 import LoadingScreen from "@/components/loading-screen";
-import { useAuthStore } from "@/lib/stores/use-auth-store";
-import { AuthModal } from "@/components/auth-modal";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -24,66 +21,40 @@ export default function Home() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
   const [howItWorksModalOpen, setHowItWorksModalOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   
-  const { user, initialized, refreshUser } = useAuthStore();
   const router = useRouter();
 
-  // Track home page visit
+  // Track home page visit (sin info de usuario)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       import('@vercel/analytics').then(({ track }) => {
         track('Home Page Visited', { 
-          userType: user ? 'authenticated' : 'anonymous',
-          tier: user?.subscription_tier || 'anonymous'
+          userType: 'development',
+          tier: 'unlimited'
         });
       });
     }
-  }, [user?.subscription_tier]);
+  }, []);
 
   const handleAnalyze = async (url: string) => {
-    // Check if user is authenticated
-    if (!user) {
-      setAuthModalOpen(true);
-      return;
-    }
-    
-    // Navigate to analysis page with URL
+    // Modo desarrollo: análisis directo sin verificación
     router.push(`/analysis?url=${encodeURIComponent(url)}`);
   };
 
   const handleLoadingComplete = () => {
     setIsLoading(false);
-    // Delay content appearance for smooth transition
     setTimeout(() => {
       setContentVisible(true);
     }, 100);
   };
 
-  // Skip loading screen on auth redirect or if already initialized
+  // Saltar pantalla de carga en desarrollo
   useEffect(() => {
-    // Check if we're coming from auth callback or checkout
-    const urlParams = new URLSearchParams(window.location.search);
-    const fromAuth = urlParams.get('from_auth');
-    const checkoutSuccess = urlParams.get('checkout');
-    
-    if (fromAuth || (initialized && user)) {
-      // Skip loading screen if coming from auth or already logged in
+    if (process.env.NEXT_PUBLIC_APP_MODE === 'development') {
       setIsLoading(false);
       setContentVisible(true);
     }
-    
-    // Handle checkout success
-    if (checkoutSuccess === 'success' && user) {
-      // Clean up URL
-      router.replace('/');
-      // Refresh user data to get updated subscription info
-      const intervals = [1000, 2000, 3000, 5000];
-      intervals.forEach(delay => {
-        setTimeout(() => refreshUser(), delay);
-      });
-    }
-  }, [initialized, user, router, refreshUser]);
+  }, []);
 
   return (
     <>
@@ -117,13 +88,12 @@ export default function Home() {
 
         <HighestROI onAnalyze={(url) => {
           setMarketUrl(url);
-          // Small delay to let URL populate, then submit
           setTimeout(() => {
             handleAnalyze(url);
           }, 100);
         }} />
         
-        <MonetizationStrip />
+        {/* MonetizationStrip eliminado - sin límites en desarrollo */}
       </motion.div>
 
       <ShareModal
@@ -144,10 +114,7 @@ export default function Home() {
         onOpenChange={setHowItWorksModalOpen}
       />
 
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={setAuthModalOpen}
-      />
+      {/* AuthModal eliminado - sin autenticación en desarrollo */}
     </>
   );
 }
