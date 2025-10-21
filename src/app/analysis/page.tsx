@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight, ExternalLink, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, CheckCircle, Clock, AlertCircle, Check } from "lucide-react";
 import Image from "next/image";
 import { ForecastCard } from "@/lib/forecasting/types";
 import { useAuthStore } from "@/lib/stores/use-auth-store";
@@ -56,12 +56,15 @@ const STEP_CONFIG: Record<string, { name: string; description: string }> = {
   report_complete: { name: 'Analysis Finished', description: 'Final report generated' }
 };
 
+// Helper component for check marks
+const CheckMark = () => <Check className="w-3 h-3 inline mr-1 text-green-400" />;
+
 function AnalysisContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuthStore();
   const url = searchParams.get("url");
-  const historyId = searchParams.get("id"); // New: Check for historical analysis ID
+  const historyId = searchParams.get("id");
   const [mounted, setMounted] = useState(false);
   const [steps, setSteps] = useState<AnalysisStep[]>([]);
   const [forecast, setForecast] = useState<ForecastCard | null>(null);
@@ -70,19 +73,15 @@ function AnalysisContent() {
   const [historicalAnalysis, setHistoricalAnalysis] = useState<any>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Determine if this is a historical view
   const isHistoricalView = !!historyId;
 
   const extractIdentifier = useCallback((url: string) => {
-    // Try Polymarket first
     const polymarketMatch = url.match(/polymarket\.com\/event\/([^/?]+)/);
     if (polymarketMatch) return polymarketMatch[1];
 
-    // Try Kalshi full path (with ticker)
     const kalshiFullMatch = url.match(/kalshi\.com\/markets\/[^/]+\/[^/]+\/([A-Z0-9-]+)/i);
     if (kalshiFullMatch) return kalshiFullMatch[1];
 
-    // Try Kalshi series path
     const kalshiSeriesMatch = url.match(/kalshi\.com\/markets\/([a-z0-9-]+)/i);
     if (kalshiSeriesMatch) return kalshiSeriesMatch[1];
 
@@ -119,25 +118,23 @@ function AnalysisContent() {
         const data = await response.json();
         setHistoricalAnalysis(data);
         
-        // Convert historical data to the display format
         if (data.report) {
           const historicalForecast: ForecastCard = {
             question: data.report.market_question || 'Historical Analysis',
             pNeutral: data.report.probability || 0.5,
             pAware: data.report.market_aware_probability,
             p0: data.report.prior_probability || 0.5,
-            alpha: 1.0, // Default alpha value
+            alpha: 1.0,
             drivers: data.report.drivers || [],
-            evidenceInfluence: [], // Use correct property name
+            evidenceInfluence: [],
             clusters: [],
-            audit: {}, // Required audit object
+            audit: {},
             provenance: data.report.sources || [],
             markdownReport: data.report.markdown_report || data.report.summary || ''
           };
           setForecast(historicalForecast);
         }
 
-        // Convert historical steps to display format if available
         if (data.analysis_steps && Array.isArray(data.analysis_steps)) {
           const historicalSteps: AnalysisStep[] = data.analysis_steps.map((step: any, index: number) => ({
             id: step.step || `step_${index}`,
@@ -163,6 +160,88 @@ function AnalysisContent() {
     }
   }, [historyId, user]);
 
+  const handleProgressEvent = useCallback((event: ProgressEvent) => {
+    console.log('Progress event:', event);
+
+    if (event.type === 'error') {
+      setError(event.error || 'Unknown error occurred');
+      
+      if (typeof window !== 'undefined') {
+        import('@vercel/analytics').then(({ track }) => {
+          track('Analysis Error', { 
+            error: event.error || 'Unknown error',
+            url: url,
+            userType: user ? 'authenticated' : 'anonymous',
+            tier: user?.subscription_tier || 'anonymous'
+          });
+        });
+      }
+      return;
+    }
+
+    if (event.type === 'complete' && event.forecast) {
+      setForecast(event.forecast);
+      setIsComplete(true);
+      setSteps(prev => prev.map(step => ({ ...step, status: 'complete' as const })));
+      
+      if (typeof window !== 'undefined' && event.forecast) {
+        import('@vercel/analytics').then(({ track }) => {
+          track('Report Completed', {
+            url: url,
+            identifier: extractIdentifier(url || ''),
+            platform: detectPlatform(url || ''),
+            userType: user ? 'authenticated' : 'anonymous',
+            tier: user?.subscription_tier || 'anonymous',
+            probability: event.forecast?.pNeutral || 0.5,
+            confidence: Math.abs((event.forecast?.pNeutral || 0.5) - 0.5) * 200,
+            evidenceCount: event.forecast?.evidenceInfluence?.length || 0
+          });
+        });
+      }
+      return;
+    }
+
+    if (event.type === 'progress' && event.step) {
+      const stepConfig = STEP_CONFIG[event.step];
+      if (!stepConfig) return;
+
+      setSteps(prev => {
+        const existingIndex = prev.findIndex(s => s.id === event.step);
+        
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          const hasResponseData = event.details?.response || event.details?.urls || event.details?.plan;
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            message: event.details?.message || event.message || stepConfig.description,
+            details: event.details,
+            timestamp: event.timestamp,
+            status: hasResponseData ? 'complete' : 'running'
+          };
+          return updated;
+        } else {
+          const updated = prev.map((step, index) => 
+            index === prev.length - 1 && step.status === 'running' 
+              ? { ...step, status: 'complete' as const }
+              : step
+          );
+          
+          const newStep: AnalysisStep = {
+            id: event.step!,
+            name: stepConfig.name,
+            message: event.details?.message || event.message || stepConfig.description,
+            status: 'running',
+            details: event.details,
+            timestamp: event.timestamp,
+            expanded: false
+          };
+          
+          return [...updated, newStep];
+        }
+      });
+    }
+  }, [url, user, extractIdentifier, detectPlatform]);
+
   const startAnalysis = useCallback(() => {
     if (!url) return;
 
@@ -174,7 +253,6 @@ function AnalysisContent() {
       return;
     }
 
-    // Track URL entered event
     if (typeof window !== 'undefined') {
       import('@vercel/analytics').then(({ track }) => {
         track('Analysis Started', {
@@ -187,7 +265,6 @@ function AnalysisContent() {
       });
     }
 
-    // Check anonymous usage limits if user is not authenticated
     if (!user) {
       const { canProceed, reason } = canClientAnonymousUserQuery();
       if (!canProceed) {
@@ -207,7 +284,6 @@ function AnalysisContent() {
     })
     .then(async response => {
       if (!response.ok) {
-        // Try to get the error message from the response body
         let errorMessage = `HTTP error! status: ${response.status}`;
         
         try {
@@ -218,7 +294,6 @@ function AnalysisContent() {
               const errorData = JSON.parse(responseText);
               errorMessage = errorData.error || errorMessage;
             } catch (jsonError) {
-              // If it's not JSON, maybe it's plain text
               errorMessage = responseText || errorMessage;
             }
           }
@@ -226,13 +301,11 @@ function AnalysisContent() {
           // Keep the default errorMessage
         }
         
-        // Check if this is a rate limit error - handle it gracefully without console error
         const isRateLimitError = errorMessage.includes('Daily limit exceeded') || errorMessage.includes('limited to 1 free analysis');
         
         if (isRateLimitError) {
-          // Set error state directly without throwing to avoid console error
           setError(errorMessage);
-          return; // Exit early, don't throw
+          return;
         }
         
         throw new Error(errorMessage);
@@ -275,95 +348,7 @@ function AnalysisContent() {
       console.error('Analysis failed:', err);
       setError(err.message || 'Analysis failed');
     });
-  }, [url, extractIdentifier, detectPlatform, user]);
-
-  const handleProgressEvent = useCallback((event: ProgressEvent) => {
-    console.log('Progress event:', event);
-
-    if (event.type === 'error') {
-      setError(event.error || 'Unknown error occurred');
-      
-      // Track analysis errors
-      if (typeof window !== 'undefined') {
-        import('@vercel/analytics').then(({ track }) => {
-          track('Analysis Error', { 
-            error: event.error || 'Unknown error',
-            url: url,
-            userType: user ? 'authenticated' : 'anonymous',
-            tier: user?.subscription_tier || 'anonymous'
-          });
-        });
-      }
-      return;
-    }
-
-    if (event.type === 'complete' && event.forecast) {
-      setForecast(event.forecast);
-      setIsComplete(true);
-      // Mark all steps as complete
-      setSteps(prev => prev.map(step => ({ ...step, status: 'complete' as const })));
-      
-      // Track report completion event
-      if (typeof window !== 'undefined' && event.forecast) {
-        import('@vercel/analytics').then(({ track }) => {
-          track('Report Completed', {
-            url: url,
-            identifier: extractIdentifier(url || ''),
-            platform: detectPlatform(url || ''),
-            userType: user ? 'authenticated' : 'anonymous',
-            tier: user?.subscription_tier || 'anonymous',
-            probability: event.forecast?.pNeutral || 0.5,
-            confidence: Math.abs((event.forecast?.pNeutral || 0.5) - 0.5) * 200,
-            evidenceCount: event.forecast?.evidenceInfluence?.length || 0
-          });
-        });
-      }
-      return;
-    }
-
-    if (event.type === 'progress' && event.step) {
-      const stepConfig = STEP_CONFIG[event.step];
-      if (!stepConfig) return;
-
-      setSteps(prev => {
-        const existingIndex = prev.findIndex(s => s.id === event.step);
-        
-        if (existingIndex >= 0) {
-          // Update existing step - if it has response data, mark as complete
-          const updated = [...prev];
-          const hasResponseData = event.details?.response || event.details?.urls || event.details?.plan;
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            message: event.details?.message || event.message || stepConfig.description,
-            details: event.details,
-            timestamp: event.timestamp,
-            status: hasResponseData ? 'complete' : 'running'
-          };
-          return updated;
-        } else {
-          // Mark previous step as complete when starting a new one
-          const updated = prev.map((step, index) => 
-            index === prev.length - 1 && step.status === 'running' 
-              ? { ...step, status: 'complete' as const }
-              : step
-          );
-          
-          // Add new step
-          const newStep: AnalysisStep = {
-            id: event.step!,
-            name: stepConfig.name,
-            message: event.details?.message || event.message || stepConfig.description,
-            status: 'running',
-            details: event.details,
-            timestamp: event.timestamp,
-            expanded: false
-          };
-          
-          return [...updated, newStep];
-        }
-      });
-    }
-  }, []);
+  }, [url, extractIdentifier, detectPlatform, user, handleProgressEvent]);
 
   const openMarketBet = useCallback(() => {
     const targetUrl = isHistoricalView ? historicalAnalysis?.market_url : url;
@@ -381,19 +366,16 @@ function AnalysisContent() {
 
   useEffect(() => {
     setMounted(true);
-    // Note: Removed authentication redirect to allow anonymous users
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
 
     if (isHistoricalView) {
-      // Load historical analysis
       if (historyId && user && !isComplete && !isLoadingHistory) {
         fetchHistoricalAnalysis();
       }
     } else {
-      // Start live analysis
       if (url && !isComplete && steps.length === 0) {
         startAnalysis();
       }
@@ -402,7 +384,6 @@ function AnalysisContent() {
 
   if (!mounted) return null;
 
-  // Special loading state for historical analysis
   if (isHistoricalView && isLoadingHistory) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
@@ -423,7 +404,6 @@ function AnalysisContent() {
     );
   }
 
-  // Special error handling for historical analysis
   if (isHistoricalView && error) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
@@ -445,13 +425,11 @@ function AnalysisContent() {
   }
 
   if (error) {
-    // Check if this is a rate limit error
     const isAnonymousRateLimit = error.includes('Daily limit exceeded') || error.includes('limited to 2 free analyses');
     const isSignedInRateLimit = error.includes('Signed-in users get 2 free analyses per day');
     const isRateLimitError = isAnonymousRateLimit || isSignedInRateLimit;
     
     if (isRateLimitError) {
-      // Track rate limit hit
       if (typeof window !== 'undefined') {
         import('@vercel/analytics').then(({ track }) => {
           track('Rate Limit Hit', { 
@@ -463,7 +441,6 @@ function AnalysisContent() {
       
       return (
         <div className="min-h-screen bg-black text-white p-4 relative overflow-hidden">
-          {/* Video Background */}
           <div className="fixed inset-0 w-full h-full z-0">
             <video
               autoPlay
@@ -474,11 +451,9 @@ function AnalysisContent() {
             >
               <source src="/analysis.webm" type="video/webm" />
             </video>
-            {/* Dark overlay for better text readability */}
             <div className="absolute inset-0 bg-black/40"></div>
           </div>
           
-          {/* Content overlay */}
           <div className="relative z-50 flex items-center justify-center min-h-screen">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -486,27 +461,21 @@ function AnalysisContent() {
               transition={{ duration: 0.5 }}
               className="text-center max-w-4xl mx-auto"
             >
-              {/* Show different UI for signed-in vs anonymous users */}
               {isSignedInRateLimit ? (
-                /* Signed-in user rate limit UI */
                 <>
-                  {/* Main Card */}
                   <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-6 mb-6 max-w-2xl mx-auto">
-                    {/* Icon */}
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
                       <AlertCircle className="w-6 h-6 text-white" />
                     </div>
                     
-                    {/* Title */}
                     <h1 className="text-2xl md:text-3xl font-bold text-white mb-3 font-[family-name:var(--font-space)]">
-                      
+                      Daily Limit Reached
                     </h1>
                     <p className="text-white/80 mb-4">
-                    Pump.FUN
+                      xxx
                     </p>
                   </div>
                   
-                  {/* Pay Per Use Focus */}
                   <div className="max-w-md mx-auto mb-6">
                     <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-300/30 rounded-2xl p-6 text-center">
                       <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -516,11 +485,11 @@ function AnalysisContent() {
                       <p className="text-white/80 mb-4">Pay only for what you use</p>
                       <div className="text-white/90 text-2xl font-bold mb-2">~$5 <span className="text-sm font-normal">typical cost</span></div>
                       <p className="text-white/60 text-sm mb-4">Exact cost based on usage</p>
-                      <ul className="text-white/80 text-sm space-y-2 mb-6">
-                        <li>✓ Pay actual API costs</li>
-                        <li>✓ No monthly commitment</li>
-                        <li>✓ Transparent pricing</li>
-                        <li>✓ Start analyzing immediately</li>
+                      <ul className="text-white/80 text-sm space-y-2 mb-6 text-left">
+                        <li><CheckMark /> Pay actual API costs</li>
+                        <li><CheckMark /> No monthly commitment</li>
+                        <li><CheckMark /> Transparent pricing</li>
+                        <li><CheckMark /> Start analyzing immediately</li>
                       </ul>
                       <Button 
                         onClick={() => router.push('/?plan=payperuse')} 
@@ -532,7 +501,6 @@ function AnalysisContent() {
                     </div>
                   </div>
                   
-                  {/* Action Buttons */}
                   <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4 max-w-md mx-auto">
                     <div className="text-center">
                       <p className="text-white/60 text-sm mb-3">
@@ -550,16 +518,12 @@ function AnalysisContent() {
                   </div>
                 </>
               ) : (
-                /* Anonymous user rate limit UI */
                 <>
-                  {/* Main Card */}
                   <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-6 mb-6 max-w-2xl mx-auto">
-                    {/* Icon */}
                     <div className="w-12 h-12 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full flex items-center justify-center mx-auto mb-4">
                       <AlertCircle className="w-6 h-6 text-white" />
                     </div>
                     
-                    {/* Title */}
                     <h1 className="text-2xl md:text-3xl font-bold text-white mb-3 font-[family-name:var(--font-space)]">
                       Daily Limit Reached
                     </h1>
@@ -568,9 +532,7 @@ function AnalysisContent() {
                     </p>
                   </div>
                   
-                  {/* Pricing Plans */}
                   <div className="grid md:grid-cols-2 gap-4 mb-6 max-w-2xl mx-auto">
-                    {/* Pay Per Use */}
                     <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-6 text-center hover:bg-white/25 transition-all cursor-pointer">
                       <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center mx-auto mb-3">
                         <div className="w-3 h-3 bg-white rounded-full"></div>
@@ -579,14 +541,13 @@ function AnalysisContent() {
                       <p className="text-white/70 text-sm mb-3">Pay only for what you use</p>
                       <div className="text-white/90 text-xl font-bold mb-1">~$5 <span className="text-sm font-normal">typical cost</span></div>
                       <p className="text-white/60 text-xs mb-3">Exact cost based on usage</p>
-                      <ul className="text-white/70 text-sm space-y-1">
-                        <li>✓ Pay actual API costs</li>
-                        <li>✓ No monthly commitment</li>
-                        <li>✓ Transparent pricing</li>
+                      <ul className="text-white/70 text-sm space-y-1 text-left">
+                        <li><CheckMark /> Pay actual API costs</li>
+                        <li><CheckMark /> No monthly commitment</li>
+                        <li><CheckMark /> Transparent pricing</li>
                       </ul>
                     </div>
                     
-                    {/* Subscription */}
                     <div className="bg-gradient-to-br from-purple-500/30 to-blue-500/30 backdrop-blur-sm border border-purple-300/50 rounded-2xl p-6 text-center hover:from-purple-500/40 hover:to-blue-500/40 transition-all cursor-pointer relative">
                       <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
                         POPULAR
@@ -597,16 +558,15 @@ function AnalysisContent() {
                       <h3 className="text-white font-semibold text-lg mb-2">Unlimited</h3>
                       <p className="text-white/70 text-sm mb-3">Best value for active traders</p>
                       <div className="text-white/90 text-xl font-bold mb-3">$29 <span className="text-sm font-normal">per month</span></div>
-                      <ul className="text-white/70 text-sm space-y-1">
-                        <li>✓ Unlimited analyses</li>
-                        <li>✓ Telegram alerts</li>
-                        <li>✓ Event monitoring</li>
-                        <li>✓ Priority support</li>
+                      <ul className="text-white/70 text-sm space-y-1 text-left">
+                        <li><CheckMark /> Unlimited analyses</li>
+                        <li><CheckMark /> Telegram alerts</li>
+                        <li><CheckMark /> Event monitoring</li>
+                        <li><CheckMark /> Priority support</li>
                       </ul>
                     </div>
                   </div>
                   
-                  {/* Action Buttons */}
                   <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl p-4 max-w-2xl mx-auto">
                     <div className="flex flex-col sm:flex-row gap-3 justify-center mb-3">
                       <Button 
@@ -626,7 +586,6 @@ function AnalysisContent() {
                       </Button>
                     </div>
                     
-                    {/* Reset Info */}
                     <p className="text-white/60 text-xs text-center">
                       Free analysis resets daily at midnight • <button onClick={() => router.push('/')} className="underline hover:text-white">Back to Home</button>
                     </p>
@@ -636,13 +595,11 @@ function AnalysisContent() {
             </motion.div>
           </div>
           
-          {/* Bottom fade overlay */}
           <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none z-40"></div>
         </div>
       );
     }
     
-    // Default error state for other errors
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <motion.div
@@ -664,7 +621,6 @@ function AnalysisContent() {
 
   return (
     <div className="min-h-screen bg-black text-white p-4 relative overflow-hidden">
-      {/* Video Background */}
       <div className="fixed inset-0 w-full h-full z-0">
         <video
           autoPlay
@@ -675,14 +631,11 @@ function AnalysisContent() {
         >
           <source src="/analysis.webm" type="video/webm" />
         </video>
-        {/* Dark overlay for better text readability */}
         <div className="absolute inset-0 bg-black/40"></div>
       </div>
       
-      {/* Content overlay */}
       <div className="relative z-50 max-w-4xl mx-auto pt-24">
         
-        {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold text-white font-[family-name:var(--font-space)]">
@@ -737,7 +690,6 @@ function AnalysisContent() {
           )}
         </div>
         
-        {/* Anonymous User Banner */}
         {!user && !isHistoricalView && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -746,7 +698,7 @@ function AnalysisContent() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-medium text-white/90 mb-1">Pump.FUN  PolyMarket Analisis.</h3>
+                <h3 className="text-sm font-medium text-white/90 mb-1">PolyMarket Analysis.</h3>
                 <p className="text-xs text-white/70">
                   
                 </p>
@@ -802,9 +754,7 @@ function AnalysisContent() {
           </div>
         </motion.div>
 
-        {/* Analysis Trail */}
         <div className="relative mb-12">
-          {/* Timeline Line */}
           <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/40 via-purple-500/40 to-green-500/40"></div>
           
           <div className="space-y-8">
@@ -822,7 +772,6 @@ function AnalysisContent() {
                   }}
                   className="relative"
                 >
-                  {/* Timeline Dot */}
                   <div className="absolute left-6 top-6 z-10">
                     <div className={`
                       w-4 h-4 rounded-full border-2 transition-all duration-300
@@ -837,7 +786,6 @@ function AnalysisContent() {
                     `}></div>
                   </div>
                   
-                  {/* Step Card */}
                   <div className="ml-16">
                     <Card className={`
                       relative z-10 backdrop-blur-sm transition-all duration-300 cursor-pointer hover:scale-[1.02] 
@@ -928,7 +876,7 @@ function AnalysisContent() {
                                   }
                                 `}
                               >
-                                {step.status === 'running' && '●'} {step.status}
+                                {step.status === 'running' && <span className="mr-1">●</span>} {step.status}
                               </Badge>
                             </motion.div>
                             
@@ -1069,7 +1017,6 @@ function AnalysisContent() {
           </div>
         </div>
 
-        {/* Final Results */}
         <AnimatePresence>
           {isComplete && forecast && (
             <motion.div
@@ -1246,7 +1193,6 @@ function AnalysisContent() {
         )}
       </div>
       
-      {/* Bottom fade overlay */}
       <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none z-40"></div>
     </div>
   );
