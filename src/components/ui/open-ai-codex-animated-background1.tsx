@@ -32,18 +32,13 @@ export const OpenAICodexAnimatedBackground = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Fallback con gradiente violeta
+  // Don't render on server
   if (!mounted) {
-    return (
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-violet-100 via-purple-50 to-fuchsia-100 dark:from-violet-950 dark:via-purple-900 dark:to-fuchsia-950" />
-    );
+    return <div className="fixed inset-0 -z-10 bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900" />;
   }
 
   return (
     <div className={cn("fixed inset-0 -z-10")}>
-      {/* Capa de gradiente violeta sobre UnicornStudio */}
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-500/30 via-purple-500/20 to-fuchsia-500/30 dark:from-violet-600/40 dark:via-purple-600/30 dark:to-fuchsia-600/40 mix-blend-overlay pointer-events-none" />
-      
       <UnicornScene 
         production={true} 
         projectId="1grEuiVDSVmyvEMAYhA6" 
