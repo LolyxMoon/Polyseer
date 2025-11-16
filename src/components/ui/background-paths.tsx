@@ -12,14 +12,14 @@ function FloatingPaths({ position }: { position: number }) {
         } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
             684 - i * 5 * position
         } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
-        color: `rgba(139, 92, 246, ${0.1 + i * 0.03})`, // Violeta con opacidad variable
+        color: `rgba(15,23,42,${0.1 + i * 0.03})`,
         width: 0.5 + i * 0.03,
     }));
 
     return (
         <div className="absolute inset-0 pointer-events-none">
             <svg
-                className="w-full h-full text-violet-500 dark:text-violet-400"
+                className="w-full h-full text-slate-950 dark:text-white"
                 viewBox="0 0 696 316"
                 fill="none"
             >
@@ -51,7 +51,7 @@ function FloatingPaths({ position }: { position: number }) {
 
 export function BackgroundPaths() {
     return (
-        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-violet-950 via-purple-900 to-fuchsia-950">
+        <div className="fixed inset-0 -z-10">
             <div className="absolute inset-0">
                 <FloatingPaths position={1} />
                 <FloatingPaths position={-1} />
