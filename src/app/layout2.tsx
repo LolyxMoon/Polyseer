@@ -60,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased bg-violet-50 dark:bg-violet-950 text-neutral-900 dark:text-neutral-100`}
+        className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100`}
       >
         <Providers>
           <AuthInitializer>
@@ -76,10 +76,10 @@ export default function RootLayout({
                   <div 
                     className="absolute -inset-4 rounded-full blur-2xl"
                     style={{
-                      background: 'radial-gradient(circle, rgba(88,28,135,0.6) 0%, rgba(88,28,135,0.3) 50%, transparent 100%)',
+                      background: 'radial-gradient(circle, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)',
                     }}
                   ></div>
-                  <div className="relative bg-violet-900/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                  <div className="relative bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
                     <a 
                       href="/terms" 
                       className="text-sm text-white/80 hover:text-white/100 font-medium transition-colors underline underline-offset-2"
@@ -95,10 +95,10 @@ export default function RootLayout({
                   <div 
                     className="absolute -inset-4 rounded-full blur-2xl"
                     style={{
-                      background: 'radial-gradient(circle, rgba(109,40,217,0.8) 0%, rgba(109,40,217,0.5) 50%, transparent 100%)',
+                      background: 'radial-gradient(circle, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 50%, transparent 100%)',
                     }}
                   ></div>
-                  <div className="relative bg-violet-900/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                  <div className="relative bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
                     <span className="text-sm text-white/90 font-medium">Not financial advice</span>
                   </div>
                 </div>
