@@ -179,7 +179,7 @@ export default function HeroSection({ onAnalyze, isAnalyzing, onShowHowItWorks, 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 1.3, ease: "easeOut" }}
-              className="flex justify-center mt-4"
+              className="flex justify-center mt-10"
             >
               <div className="relative flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/30">
                 <span className="text-sm text-white/80 font-medium">Follow us</span>
