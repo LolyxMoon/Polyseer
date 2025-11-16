@@ -54,10 +54,10 @@ const fallbackMarkets: FeaturedMarket[] = [
   },
   {
     id: 4,
-    slug: "Meteora FDV above ___ one day after launch?",
-    question: "Meteora FDV above ___ one day after launch?",
+    slug: "Fed decision in December?",
+    question: "Fed decision in December?",
     category: null,
-    polymarket_url: "https://polymarket.com/event/meteora-fdv-above-one-day-after-launch?tid=1760928405793",
+    polymarket_url: "https://polymarket.com/event/fed-decision-in-december?tid=1763318640800",
     volume: 2500000,
     end_date: "2025-12-31T23:59:59Z",
     current_odds: { yes: 0.42, no: 0.58 },
@@ -112,7 +112,7 @@ function MarketCard({ market, onAnalyze }: MarketCardProps) {
 
   return (
     <div 
-      className="w-[240px] md:w-[300px] h-[140px] md:h-[180px] bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl p-2.5 md:p-4 flex flex-col justify-between hover:bg-white/30 transition-all cursor-pointer border border-white/30 shadow-xl hover:shadow-2xl hover:border-white/40 group"
+      className="w-[240px] md:w-[300px] h-[140px] md:h-[180px] bg-violet-500/20 backdrop-blur-sm rounded-xl md:rounded-2xl p-2.5 md:p-4 flex flex-col justify-between hover:bg-violet-400/30 transition-all cursor-pointer border border-violet-300/30 shadow-xl hover:shadow-2xl hover:border-violet-300/50 group"
       onClick={handleClick}
     >
       <div className="flex flex-col h-full justify-between">
@@ -121,7 +121,7 @@ function MarketCard({ market, onAnalyze }: MarketCardProps) {
             <h3 className="font-medium text-xs md:text-sm text-white/90 line-clamp-2 flex-1 mr-2">
               {market.question}
             </h3>
-            <ExternalLink className="w-3 h-3 text-white/40 group-hover:text-white/60 transition-colors flex-shrink-0" />
+            <ExternalLink className="w-3 h-3 text-violet-200/60 group-hover:text-violet-100/80 transition-colors flex-shrink-0" />
           </div>
           
           {market.category && (
@@ -135,25 +135,25 @@ function MarketCard({ market, onAnalyze }: MarketCardProps) {
 
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <div className="text-white/60">
+            <div className="text-violet-100/70">
               <span>Volume: </span>
-              <span className="text-white/80 font-medium">{formatVolume(market.volume)}</span>
+              <span className="text-white/90 font-medium">{formatVolume(market.volume)}</span>
             </div>
             {odds && (
-              <div className="text-white/60">
+              <div className="text-violet-100/70">
                 <span>YES: </span>
-                <span className="text-white/80 font-medium">{odds.yes}%</span>
-                <span className="text-white/40 mx-1">|</span>
+                <span className="text-white/90 font-medium">{odds.yes}%</span>
+                <span className="text-violet-200/40 mx-1">|</span>
                 <span>NO: </span>
-                <span className="text-white/80 font-medium">{odds.no}%</span>
+                <span className="text-white/90 font-medium">{odds.no}%</span>
               </div>
             )}
           </div>
           
           {odds && (
-            <div className="w-full bg-white/20 backdrop-blur-sm rounded-full h-1.5 overflow-hidden border border-white/20">
+            <div className="w-full bg-violet-900/30 backdrop-blur-sm rounded-full h-1.5 overflow-hidden border border-violet-400/20">
               <div 
-                className="h-full rounded-full transition-all bg-gradient-to-r from-blue-400/80 to-purple-400/80"
+                className="h-full rounded-full transition-all bg-gradient-to-r from-violet-400/90 to-fuchsia-400/90"
                 style={{ width: `${odds.yes}%` }}
               />
             </div>
@@ -211,14 +211,14 @@ export default function HighestROI({ onAnalyze }: HighestROIProps) {
   ));
 
   if (isLoading) {
-    // Show loading skeleton
+    // Show loading skeleton con colores violeta
     const skeletonCards = Array.from({ length: 6 }, (_, i) => (
-      <div key={i} className="w-[300px] h-[180px] bg-white/10 backdrop-blur-sm rounded-2xl p-4 animate-pulse border border-white/20">
-        <div className="h-4 bg-white/20 rounded mb-2"></div>
-        <div className="h-3 bg-white/20 rounded mb-4 w-3/4"></div>
+      <div key={i} className="w-[300px] h-[180px] bg-violet-500/15 backdrop-blur-sm rounded-2xl p-4 animate-pulse border border-violet-400/20">
+        <div className="h-4 bg-violet-400/30 rounded mb-2"></div>
+        <div className="h-3 bg-violet-400/30 rounded mb-4 w-3/4"></div>
         <div className="space-y-2">
-          <div className="h-2 bg-white/20 rounded"></div>
-          <div className="h-1 bg-white/20 rounded"></div>
+          <div className="h-2 bg-violet-400/30 rounded"></div>
+          <div className="h-1 bg-violet-400/30 rounded"></div>
         </div>
       </div>
     ));
@@ -236,7 +236,7 @@ export default function HighestROI({ onAnalyze }: HighestROIProps) {
               <TrendingUp className="h-5 w-5" />
               Try Sample Analysis
             </motion.h2>
-            <p className="text-sm text-white/70 mt-1">
+            <p className="text-sm text-violet-100/70 mt-1">
               Loading trending markets...
             </p>
           </div>
