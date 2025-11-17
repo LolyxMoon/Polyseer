@@ -206,8 +206,8 @@ export default function Header() {
           >
             <Link href='/' className='inline-block pt-6'>
               <Image
-                src='/PolyWizard.png'
-                alt='PolyWizard'
+                src='/banner1.png'
+                alt='banner1'
                 width={200}
                 height={80}
                 className='h-24 md:h-24 w-auto drop-shadow-md'
