@@ -204,7 +204,7 @@ export default function Header() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
           >
-            <Link href='/' className='inline-block pt-6'>
+            <Link href='/' className='inline-block pt-12'>
               <Image
                 src='/banner1.png'
                 alt='banner1'
