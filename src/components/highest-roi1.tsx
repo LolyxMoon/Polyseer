@@ -54,7 +54,7 @@ const fallbackMarkets: FeaturedMarket[] = [
   },
   {
     id: 4,
-    slug: "How low will Bitcoin get this year?",
+    slug: "How low will Bitcoin get this year!?",
     question: "How low will Bitcoin get this year?",
     category: null,
     polymarket_url: "https://kalshi.com/markets/kxbtcminy/how-low-will-bitcoin-fall-this-year/kxbtcminy-25-2",
