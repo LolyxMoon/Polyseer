@@ -41,7 +41,7 @@ export const OpenAICodexAnimatedBackground = () => {
     <div className={cn("fixed inset-0 -z-10")}>
       <UnicornScene 
         production={true} 
-        projectId="1grEuiVDSVmyvEMAYhA6" 
+        projectId="uzrqnrTVWQBQiH2WaVqS" 
         width={windowSize.width} 
         height={windowSize.height} 
       />
