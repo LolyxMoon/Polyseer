@@ -20,21 +20,21 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "PolyMonad | See the future.",
+  title: "Kalshdiction | See the future.",
   description: "AI-powered deep research for prediction markets. Paste any Polymarket or Kalshi URL and get an analyst-grade research report in seconds.",
   keywords: ["polymarket", "kalshi", "prediction markets", "AI deep research", "forecasting", "analysis"],
-  authors: [{ name: "PolyMonad" }],
+  authors: [{ name: "Kalshdiction" }],
   openGraph: {
-    title: "PolyMonad | See the future.",
+    title: "Kalshdiction | See the future.",
     description: "AI-powered deep research for prediction markets. Supports Polymarket and Kalshi.",
-    url: "https://PolyMonad.xyz",
-    siteName: "PolyMonad",
+    url: "https://Kalshdiction.xyz",
+    siteName: "Kalshdiction",
     images: [
       {
         url: "/og.png",
         width: 1200,
         height: 630,
-        alt: "Verdict: ✅ YES • Confidence 78% • PolyMonad.xyz",
+        alt: "Verdict: ✅ YES • Confidence 78% • Kalshdiction.xyz",
       },
     ],
     locale: "en_US",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PolyMonad | See the future.",
+    title: "Kalshdiction | See the future.",
     description: "AI-powered deep research for prediction markets. Supports Polymarket and Kalshi.",
     images: ["/og.png"],
   },
