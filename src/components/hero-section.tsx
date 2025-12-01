@@ -128,7 +128,7 @@ export default function HeroSection({ onAnalyze, isAnalyzing, onShowHowItWorks, 
               >
                 <Input
                   type="url"
-                  placeholder="Paste Polymarket or Kalshi URL... Or click one of the trending markets below 👇"
+                  placeholder="Paste Kalshi URL... Or click one of the trending markets below 👇"
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   className={`h-12 md:h-14 text-base px-4 md:px-6 bg-white/95 backdrop-blur-sm border-white/20 focus:bg-white focus:border-white/40 placeholder:text-neutral-500 w-full ${
