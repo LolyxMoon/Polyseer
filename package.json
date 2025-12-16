@@ -54,6 +54,7 @@
     "unicornstudio-react": "^1.4.29-1",
     "uuid": "^11.1.0",
     "valyu-js": "^2.1.0",
+    "vercel": "^50.1.0",
     "viem": "^2.36.0",
     "wagmi": "^2.16.9",
     "weaviate-client": "^3.8.1",
