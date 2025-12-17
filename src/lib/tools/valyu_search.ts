@@ -57,6 +57,18 @@ export type ValyuToolResult = {
   totalCost?: number; // Cost in dollars
 };
 
+// Helper function to map SDK results to our typed results
+function mapSearchResults(sdkResults: any[]): ValyuSearchResult[] {
+  return sdkResults.map(r => ({
+    title: r.title,
+    url: r.url,
+    content: typeof r.content === 'string' ? r.content : JSON.stringify(r.content),
+    relevance_score: r.relevance_score,
+    source: r.source,
+    metadata: r.metadata,
+  }));
+}
+
 // Valyu DeepSearch Tool - Comprehensive search across multiple domains
 export const valyuDeepSearchTool = tool({
   description:
@@ -131,9 +143,8 @@ export const valyuDeepSearchTool = tool({
         );
       }
       
-      let results = response.results || [];
-      // Note: Date filtering is now handled server-side by the Valyu API using startDate in SearchOptions
-      // Client-side filtering removed since SearchResult doesn't include metadata with date information
+      // Map SDK results to our typed results (ensures content is always string)
+      const results = mapSearchResults(response.results || []);
 
       const toolResult: ValyuToolResult = {
         success: true,
@@ -229,9 +240,8 @@ export const valyuWebSearchTool = tool({
         );
       }
       
-      let results = response.results || [];
-      // Note: Date filtering is now handled server-side by the Valyu API using startDate in SearchOptions
-      // Client-side filtering removed since SearchResult doesn't include metadata with date information
+      // Map SDK results to our typed results (ensures content is always string)
+      const results = mapSearchResults(response.results || []);
 
       const toolResult: ValyuToolResult = {
         success: true,
