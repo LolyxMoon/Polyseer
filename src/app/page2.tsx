@@ -9,7 +9,6 @@ import ShareModal from "@/components/share-modal";
 import TelegramBotModal from "@/components/telegram-bot-modal";
 import HowItWorksModal from "@/components/how-it-works-modal";
 import LoadingScreen from "@/components/loading-screen";
-import KalshiMarkets from "@/components/kalshi-markets";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -25,7 +24,7 @@ export default function Home() {
   
   const router = useRouter();
 
-  // Track home page visit
+  // Track home page visit (sin info de usuario)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       import('@vercel/analytics').then(({ track }) => {
@@ -38,6 +37,7 @@ export default function Home() {
   }, []);
 
   const handleAnalyze = async (url: string) => {
+    // Modo desarrollo: análisis directo sin verificación
     router.push(`/analysis?url=${encodeURIComponent(url)}`);
   };
 
@@ -48,6 +48,7 @@ export default function Home() {
     }, 100);
   };
 
+  // Saltar pantalla de carga en desarrollo
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_APP_MODE === 'development') {
       setIsLoading(false);
@@ -64,7 +65,7 @@ export default function Home() {
       </AnimatePresence>
 
       <motion.div 
-        className="relative min-h-screen overflow-x-hidden flex flex-col"
+        className="relative h-screen overflow-hidden flex flex-col"
         initial={{ opacity: 0 }}
         animate={{ opacity: contentVisible ? 1 : 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -91,10 +92,8 @@ export default function Home() {
             handleAnalyze(url);
           }, 100);
         }} />
-
-        {/* Kalshi Markets Section */}
-        <KalshiMarkets />
         
+        {/* MonetizationStrip eliminado - sin límites en desarrollo */}
       </motion.div>
 
       <ShareModal
@@ -114,6 +113,8 @@ export default function Home() {
         open={howItWorksModalOpen}
         onOpenChange={setHowItWorksModalOpen}
       />
+
+      {/* AuthModal eliminado - sin autenticación en desarrollo */}
     </>
   );
 }
